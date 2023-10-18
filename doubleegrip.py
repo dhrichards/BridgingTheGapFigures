@@ -8,6 +8,7 @@ from tqdm import tqdm
 import agedepth
 from matplotlib import pyplot as plt
 import mcfab as mc
+import specfabfuns as sff
 with open('path2dSGdt10.pkl', 'rb') as f:
     path2d = pickle.load(f)
 
@@ -59,8 +60,8 @@ ev_z2 = np.zeros(len(paths))
 for i in tqdm(range(len(paths))):
     paths[i].Temperature()
     paths2[i].Temperature()
-    paths[i].fabric_mc(npoints)
-    paths2[i].fabric_mc(npoints,x='Reduced')
+    paths[i].fabric_sf(L)
+    paths2[i].fabric_sf(L,x='Reduced')
     depths[i] = paths[i].d[-1]
 
 
@@ -96,7 +97,7 @@ ax.set_ylabel('Eigenvalue')
 import cartopy.crs as ccrs
 import cartopy.mpl.geoaxes as geoaxes
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from meso_fab_mc import BuildHarmonics
+from mcfab import BuildHarmonics
 import matplotlib.patheffects as path_effects
 
 plt.rcParams.update({
@@ -207,7 +208,7 @@ nearestdepths = np.concatenate(([100],depthslower[1::2]))
 #Custom legend
 from matplotlib.lines import Line2D
 legend_elements = [Line2D([0], [0], color='k', lw=2, label='SpecCAF'),
-                     Line2D([0], [0], color='k', lw=2, linestyle='--', label=r"$\tilde{\lambda}' = \tilde{\lambda}/4$"),
+                     Line2D([0], [0], color='k', lw=2, linestyle='--', label=r"$\tilde{\lambda}' = 0.25\tilde{\lambda}$"),
                    Line2D([0], [0], marker='o', color='w', label='EGRIP',
                           markerfacecolor='k', markersize=4),
                           Line2D([0], [0], marker='x', color='w', label='Pole figures',
@@ -244,7 +245,7 @@ fig.savefig('eigenvaluesdouble.pdf', bbox_inches='tight')
 
 fig,axs = plt.subplots(1, 3, sharey=True,figsize=(6,4))
 
-colors = sns.color_palette("cmo.ice", 3)
+colors = sns.color_palette("deep", 3)
 
 
 
@@ -291,7 +292,6 @@ fig.savefig('eigenvaluessplit.pdf', bbox_inches='tight')
 
 
 #%%
-L=8
 mmax = 8
 vmax=2
 
@@ -301,7 +301,7 @@ def J(odf):
     for l in range(0,odf.L+1,2):
         Sff = 0*Sff
         for m in range(0,l+1,1):
-            Sff=Sff+np.abs(odf.f[odf.sh.idx(l,abs(m))])**2
+            Sff=Sff+np.abs(odf.f[odf.idx(l,abs(m))])**2
         J=J+Sff
     return J
 
@@ -348,16 +348,15 @@ epf = np.sort(epf)
 espec = np.sort(np.array([ev_n[j],ev_z[j],ev_s[j]]))
 espec2 = np.sort(np.array([ev_n2[j],ev_z2[j],ev_s2[j]]))
 
-n1 = paths[j].n[-1,...]
-m1 = paths[j].m[-1,...]
+f1 = paths[j].f[-1,...]
 
-n2 = paths2[j].n[-1,...]
-m2 = paths2[j].m[-1,...]
+f2 = paths2[j].f[-1,...]
+
 
 fig,ax = plt.subplots(1,3,figsize=(6,3.3),subplot_kw=\
                       {'projection':ccrs.AzimuthalEquidistant(90,90)})
-odf1 = BuildHarmonics(n1,m1,L,mmax)
-odf2 = BuildHarmonics(n2,m2,L,mmax)
+odf1 = sff.Plotting(L,f1)
+odf2 = sff.Plotting(L,f2)
 odf_exp = BuildHarmonics(xyz,m,L,mmax)
 
 odf1.plot(fig,ax[0],hemisphere=True)
@@ -365,8 +364,8 @@ odf2.plot(fig,ax[1],hemisphere=True)
 odf_exp.plot(fig,ax[2],hemisphere=True)
 
 
-J1 = J(odf1)
-J2 = J(odf2)
+J1 = odf1.J()
+J2 = odf2.J()
 J_exp = J(odf_exp)
 
 # ax[0].set_title('(a) SpecCAF'\
@@ -413,17 +412,17 @@ for row in range(2):
     espec = np.sort(np.array([ev_n[j],ev_z[j],ev_s[j]]))
     espec2 = np.sort(np.array([ev_n2[j],ev_z2[j],ev_s2[j]]))
 
-    n1 = paths[j].n[-1,...]
-    m1 = paths[j].m[-1,...]
 
-    n2 = paths2[j].n[-1,...]
-    m2 = paths2[j].m[-1,...]
+    f1 = paths[j].f[-1,...]
+
+    f2 = paths2[j].f[-1,...]
+
 
     # ax = subfig.subplots(nrows=1, ncols=3,subplot_kw=\
     #                         {'projection':ccrs.AzimuthalEquidistant(90,90)})    
     ax = axs[row,:]
-    odf1 = BuildHarmonics(n1,m1,L,mmax)
-    odf2 = BuildHarmonics(n2,m2,L,mmax)
+    odf1 = sff.Plotting(L,f1)
+    odf2 = sff.Plotting(L,f2)
     odf_exp = BuildHarmonics(xyz,m,L,mmax)
 
     pcol1 = odf1.plot(fig,ax[0],hemisphere=True,colorbar=True,pad=0.05)
@@ -432,8 +431,8 @@ for row in range(2):
 
     
 
-    J1 = J(odf1)
-    J2 = J(odf2)
+    J1 = odf1.J()
+    J2 = odf2.J()
     J_exp = J(odf_exp)
 
     fmax1 = pcol1.get_clim()[1]
@@ -447,7 +446,7 @@ for row in range(2):
     colnumeral  = ['i','ii','iii']
     
     ax[0].set_title('(' +colnumeral[0] + ') SpecCAF' + titlestr(J1,fmax1))
-    ax[1].set_title('(' +colnumeral[1] + r") $\tilde{\lambda}' = \tilde{\lambda}/4$" + titlestr(J2,fmax2))
+    ax[1].set_title('(' +colnumeral[1] + r") $\tilde{\lambda}' = 0.25\tilde{\lambda}$" + titlestr(J2,fmax2))
     ax[2].set_title('(' +colnumeral[2] + ') EGRIP ice core data' + titlestr(J_exp,fmax_exp))
 
     #subfig.suptitle(rowletter[row] + f' Pole figures at {depth:.0f} m',y=0.96)

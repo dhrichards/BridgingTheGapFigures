@@ -22,6 +22,7 @@ plt.rcParams.update({
 colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
 npoints=10000
+L=20
 location = 'GRIP'#,'DomeF','DomeC','Talos']
 #locations = ['DomeF']
 
@@ -45,9 +46,9 @@ ev2 = ev3 = (1 - ev1)/2
 
 
 
-a2,a4,n,m = track.fabric(p,npoints)
+a2,a4,f = track.fabric_sf(p,L)
 
-a2r,a4r,nr,mr = track.fabric(p,npoints,x='Reduced')
+a2r,a4r,fr = track.fabric_sf(p,L,x='Reduced')
 
 eigvals = np.linalg.eigvals(a2)
 
@@ -205,7 +206,8 @@ fig.savefig('gripcomparisondouble.pdf',bbox_inches='tight')
 fig,ax = plt.subplots(1,3,figsize=(6,4),sharey=True)
 
 import cmocean
-colors = sns.color_palette("cmo.ice", 3)
+colors = sns.color_palette("deep", 3)
+
 
 #plot smallest eigenvalue in left plot, etc.
 ax[0].plot(eigvals[:,0],p.d,color=colors[0],linewidth=2,label='SpecCAF')

@@ -2,18 +2,12 @@
 import numpy as np
 
 from scipy.signal import savgol_filter
-from SavitzkyGolay import sgolay2d
-import speccaf.spherical as spherical
-import speccaf.solver as solver
 import agedepth
 from scipy.optimize import minimize_scalar
-from scipy.integrate import solve_ivp
 import densityfromdepth
-from scipy.interpolate import interp1d
-from speccaf.speccaf_shtns import solver as solver_shtns
-import mcfab as mc
 import divide_data
-
+import specfabfuns as sff
+import parameters as prm
 class path2d:
     def __init__(self,time,dt,xc,yc,data):
         
@@ -204,66 +198,76 @@ class path3d:
 
 
 
-    def fabric(self,L=6,eps=1/3,x=None): #calculate fabric
+    # def fabric(self,L=6,eps=1/3,x=None): #calculate fabric
 
-        self.sh = spherical.spherical(L)
+    #     self.sh = spherical.spherical(L)
 
 
-        # Calculate fabric tensor
-        self.a2=np.zeros((self.nt,3,3))
-        self.a4=np.zeros((self.nt,3,3,3,3))
+    #     # Calculate fabric tensor
+    #     self.a2=np.zeros((self.nt,3,3))
+    #     self.a4=np.zeros((self.nt,3,3,3,3))
 
 
         
-        self.f0 = self.sh.fabricfromdiagonala2(eps)
+    #     self.f0 = self.sh.fabricfromdiagonala2(eps)
 
-        self.f=np.zeros((self.nt,self.f0.size),dtype='complex128')
-        self.f[0,:]=self.f0
-        self.a2[0,...] = self.sh.a2(self.f[0,:])
-        self.a4[0,...] = self.sh.a4(self.f[0,:])
+    #     self.f=np.zeros((self.nt,self.f0.size),dtype='complex128')
+    #     self.f[0,:]=self.f0
+    #     self.a2[0,...] = self.sh.a2(self.f[0,:])
+    #     self.a4[0,...] = self.sh.a4(self.f[0,:])
 
-        for i in range(self.nt-1):
+    #     for i in range(self.nt-1):
         
         
-            #Update fabric with dt T[i] gradu[i]
-            self.rk = solver.rk3iterate(self.T[i], self.gradu[i,...], self.sh,x=x)
-            self.f[i+1,:] = self.rk.iterate(self.f[i,:], self.dt)
+    #         #Update fabric with dt T[i] gradu[i]
+    #         self.rk = solver.rk3iterate(self.T[i], self.gradu[i,...], self.sh,x=x)
+    #         self.f[i+1,:] = self.rk.iterate(self.f[i,:], self.dt)
 
-            # Update orientation tensors
-            self.a2[i+1,...] = self.sh.a2(self.f[i+1,:].real)
-            self.a4[i+1,...] = self.sh.a4(self.f[i+1,:].real)
+    #         # Update orientation tensors
+    #         self.a2[i+1,...] = self.sh.a2(self.f[i+1,:].real)
+    #         self.a4[i+1,...] = self.sh.a4(self.f[i+1,:].real)
 
 
-    def fabric_shtns(self,L=20,x=None):
+    # def fabric_shtns(self,L=20,x=None):
 
-        self.sc = solver_shtns(lmax=L,mmax=6)
+    #     self.sc = solver_shtns(lmax=L,mmax=6)
         
-        self.f0 = self.sc.f0
+    #     self.f0 = self.sc.f0
 
-        self.f=np.zeros((self.nt,self.f0.size),dtype='complex128')
-        self.f[0,:]=self.f0
+    #     self.f=np.zeros((self.nt,self.f0.size),dtype='complex128')
+    #     self.f[0,:]=self.f0
 
-        for i in range(self.nt-1):
-            self.f[i+1,:] = self.sc.iterate(self.f[i,:], self.T[i], self.gradu[i,...], self.dt,x=x)
+    #     for i in range(self.nt-1):
+    #         self.f[i+1,:] = self.sc.iterate(self.f[i,:], self.T[i], self.gradu[i,...], self.dt,x=x)
         
-        self.a2 = self.sc.a2(self.f).real
-        self.a4 = self.sc.a4(self.f).real
+    #     self.a2 = self.sc.a2(self.f).real
+    #     self.a4 = self.sc.a4(self.f).real
 
-    def fabric_mc(self,npoints,x=None):
+    # def fabric_mc(self,npoints,x=None):
+
+    #     if x is None:
+    #         x_tile = mc.parameters.Richards2021(self.T)
+    #     elif x=='Reduced':
+    #         x_tile = mc.parameters.Richards2021Reduced(self.T)
+    #     else:
+    #         x_tile = np.tile(x,(self.gradu.shape[0],1))
+
+    #     dt_tile = np.tile(self.dt,(self.gradu.shape[0],))
+
+    #     self.n,self.m,self.a2,self.a4 = mc.solve(npoints,self.gradu,dt_tile,x_tile)
+
+    def fabric_sf(self,L=12,x=None):
 
         if x is None:
-            x_tile = mc.parameters.Richards2021(self.T)
+            x_tile = prm.Richards2021(self.T)
         elif x=='Reduced':
-            x_tile = mc.parameters.Richards2021Reduced(self.T)
+            x_tile = prm.Richards2021Reduced(self.T)
         else:
             x_tile = np.tile(x,(self.gradu.shape[0],1))
 
         dt_tile = np.tile(self.dt,(self.gradu.shape[0],))
 
-        self.n,self.m,self.a2,self.a4 = mc.solve(npoints,self.gradu,dt_tile,x_tile)
-
-
-
+        self.a2,self.a4,self.f = sff.solve(self.gradu,dt_tile,x_tile,L)
 
 
 
@@ -377,15 +381,41 @@ class divide:
 
 
 
-def fabric(path,npoints=5000,x='Richards',sr_type='SR',model='R1'):
+# def fabric(path,npoints=5000,x='Richards',sr_type='SR',model='R1'):
+
+#     if isinstance(x,str):
+#         if x == 'Richards':
+#             x_tile = mc.parameters.Richards2021(path.T)
+#         elif x == 'Elmer':
+#             x_tile = mc.parameters.Elmer(path.T)
+#         elif x=='Reduced':
+#             x_tile = mc.parameters.Richards2021Reduced(path.T)
+
+            
+#     else:    
+#         x_tile = np.tile(x,(path.gradu.shape[0],1))
+
+    
+
+#     dt_tile = np.tile(path.dt,(path.gradu.shape[0],))
+
+
+
+#     n,m,a2,a4 = mc.solve(npoints,path.gradu,dt_tile,x_tile,model,sr_type)
+
+
+#     return a2,a4,n,m
+
+
+def fabric_sf(path,L=12,x='Richards',sr_type='SR',model='R1'):
 
     if isinstance(x,str):
         if x == 'Richards':
-            x_tile = mc.parameters.Richards2021(path.T)
+            x_tile = prm.Richards2021(path.T)
         elif x == 'Elmer':
-            x_tile = mc.parameters.Elmer(path.T)
+            x_tile = prm.Elmer(path.T)
         elif x=='Reduced':
-            x_tile = mc.parameters.Richards2021Reduced(path.T)
+            x_tile = prm.Richards2021Reduced(path.T)
 
             
     else:    
@@ -397,7 +427,8 @@ def fabric(path,npoints=5000,x='Richards',sr_type='SR',model='R1'):
 
 
 
-    n,m,a2,a4 = mc.solve(npoints,path.gradu,dt_tile,x_tile,model,sr_type)
+    a2,a4,f = sff.solve(path.gradu,dt_tile,x_tile,L)
 
 
-    return a2,a4,n,m
+    return a2,a4,f
+

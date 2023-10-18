@@ -52,7 +52,7 @@ ev_n = np.zeros(len(paths))
 ev_z = np.zeros(len(paths))
 for i in tqdm(range(len(paths))):
     paths[i].Temperature()
-    paths[i].fabric_mc(npoints,)
+    paths[i].fabric_sf(L)
     depths[i] = paths[i].d[-1]
 
     ## Due to lack of vertical shear we know one eigenvector is (0,0,1),
@@ -240,6 +240,8 @@ if npoints>=10000:
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+import specfabfuns as sff
+vmax = 0.7
 def inset(fig,ax,insx,insy,j,tind=-1,r=0.1,lon=90,lat=90,hemisphere=False,vmax=0.7):
     centre=ax.transAxes.inverted().transform(ax.transData.transform((insx, insy)))
     long_s = np.arctan2(paths[j].vy_s[-1],paths[j].vx_s[-1])*180/np.pi
@@ -252,7 +254,8 @@ def inset(fig,ax,insx,insy,j,tind=-1,r=0.1,lon=90,lat=90,hemisphere=False,vmax=0
                                  ))
 
     #odf = Reconstruct(paths[j].mmc.n,paths[j].mmc.m)
-    odf = BuildHarmonics(paths[j].n[tind,...],paths[j].m[tind,...],L,mmax)
+    # odf = BuildHarmonics(paths[j].n[tind,...],paths[j].m[tind,...],L,mmax)
+    odf = sff.Plotting(L,paths[j].f[tind,...])
     pcol = odf.plot(fig,ins,hemisphere,vmax=vmax,colorbar=False)
 
     geo = ccrs.RotatedPole()
