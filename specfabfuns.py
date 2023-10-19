@@ -2,8 +2,6 @@ from specfabpy import specfab as sf
 import numpy as np
 import scipy.special as sp
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
-import cmasher as cmr
 import cartopy.crs as ccrs
 from scipy import signal as sig
 
@@ -210,13 +208,6 @@ def angle_between_peaks(theta,F):
             strength_ratio[tt] = F[tt,peaks[1]]/F[tt,peaks[0]]
 
     return angle_between,strength_ratio
-
-
-def J(f):
-    return np.sum(np.abs(f)**2,axis=1)
-
-
-
 
 
 

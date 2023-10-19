@@ -1,11 +1,6 @@
 #%%
 import numpy as np# numpy for arrays
-from tqdm import tqdm
-import track
 import pickle
-import copy
-from tqdm import tqdm 
-import agedepth
 from matplotlib import pyplot as plt
 with open('path2dSGdt10.pkl', 'rb') as f:
     path2d = pickle.load(f)

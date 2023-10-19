@@ -4,10 +4,8 @@ from tqdm import tqdm
 import track
 import pickle
 import copy
-from tqdm import tqdm 
 import agedepth
 from matplotlib import pyplot as plt
-import mcfab as mc
 import specfabfuns as sff
 with open('path2dSGdt10.pkl', 'rb') as f:
     path2d = pickle.load(f)
@@ -161,7 +159,6 @@ for loc in range(3):
     _,ev_exp[loc,:],d_exp[loc] = loadEGRIP(loc)
 
 import seaborn as sns
-import cmocean
 colors = sns.color_palette("deep", 3)
 colors_bright = sns.color_palette("bright", 3)
 

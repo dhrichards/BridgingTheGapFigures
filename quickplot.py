@@ -4,10 +4,8 @@ from tqdm import tqdm
 import track
 import pickle
 import copy
-from tqdm import tqdm 
 import agedepth
 from matplotlib import pyplot as plt
-import mcfab as mc
 with open('path2dSGdt10.pkl', 'rb') as f:
     path2d = pickle.load(f)
 
