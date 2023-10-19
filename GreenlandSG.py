@@ -4,8 +4,6 @@ import rasterio
 import netCDF4 as nc
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
-import gc
-import pickle
 from SavitzkyGolay import sgolay2d
 
 fp = r'./greenland_vel_mosaic250_vx_v1.tif'

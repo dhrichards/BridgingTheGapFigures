@@ -3,11 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import track
 import divide_data
-from tqdm import tqdm
 import cartopy.crs as ccrs
 import cartopy.mpl.geoaxes as geoaxes
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from mcfab import BuildHarmonics
+from buildharmonics import BuildHarmonics
 import matplotlib.patheffects as path_effects
 
 
